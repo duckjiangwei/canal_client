@@ -3,13 +3,13 @@
  * ES实例工具类
  */
 
-namespace App\Http\Util;
+namespace App\Util\Es;
 
 use Elasticsearch\ClientBuilder;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
-class Es
+class EsClient
 {
     private static $client = null; //静态实例
 

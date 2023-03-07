@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use xingwenge\canal_php\CanalConnectorFactory;
 use xingwenge\canal_php\CanalClient;
 use xingwenge\canal_php\Fmt;
-use App\Http\Util\Es;
+use App\Util\Es\EsClient;
 
 class SynchronizationToEs extends Command
 {
@@ -32,6 +32,8 @@ class SynchronizationToEs extends Command
     public function handle()
     {
         try {
+            $esClient = EsClient::getEs();
+            print_r($esClient);die;
             $client = CanalConnectorFactory::createClient(CanalClient::TYPE_SOCKET_CLUE);
             # $client = CanalConnectorFactory::createClient(CanalClient::TYPE_SWOOLE);
 
