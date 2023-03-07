@@ -21,9 +21,12 @@ $app = new Laravel\Lumen\Application(
     dirname(__DIR__)
 );
 
-// $app->withFacades();
+$app->register(Illuminate\Redis\RedisServiceProvider::class);
 
-// $app->withEloquent();
+//开启门面
+ $app->withFacades();
+
+ $app->withEloquent();
 //加载配置
 $app->configure('canal_server');
 $app->configure('es');
@@ -47,6 +50,8 @@ $app->singleton(
     Illuminate\Contracts\Console\Kernel::class,
     App\Console\Kernel::class
 );
+
+
 
 /*
 |--------------------------------------------------------------------------

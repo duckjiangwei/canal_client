@@ -9,6 +9,9 @@
 
 `laravel/lumen:^6`
 
+`illuminate/redis:6.20.44`
+
+`predis/predis:^2.1`
 ## 运行步骤
 1. 拉取项目
 2. 下载依赖
@@ -16,7 +19,13 @@
 composer install
 ```
 3. 配置 .env 文件
-4. 运行项目
+4. 运行项目-将binlog信息初步解析投递到队列
 ```
-php artisan synchronization_to_es
+php artisan binlog_to_es
+```
+5. 启动队列任务
+```
+# timeout:超时时间(s)
+# trie:重试次数
+php artisan queue:work --timeout=60 --tries=3
 ```

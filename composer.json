@@ -7,7 +7,9 @@
     "require": {
         "php": "^7.2",
         "elasticsearch/elasticsearch": "7.17.1",
+        "illuminate/redis": "6.20.44",
         "laravel/lumen-framework": "^6.0",
+        "predis/predis": "^2.1",
         "xingwenge/canal_php": "^1.0"
     },
     "require-dev": {
