@@ -38,22 +38,6 @@ class BinlogToMq extends Command
     public function handle()
     {
         try {
-//            $esClient = EsClient::getEs();
-//            $params = [
-//                'index' => 'index_patient_alias',
-//                'type' => '_doc',
-//                'body' => [
-//                    'query' => [
-//                        'match' => [
-//                            'name' => '李'
-//                        ]
-//                    ]
-//                ]
-//            ];
-//
-//            $response = $esClient->search($params);
-//            print_r($response);die;
-
             $client = CanalConnectorFactory::createClient(CanalClient::TYPE_SOCKET_CLUE);
             # $client = CanalConnectorFactory::createClient(CanalClient::TYPE_SWOOLE);
 
@@ -66,11 +50,10 @@ class BinlogToMq extends Command
                 $message = $client->get(100);
                 if ($entries = $message->getEntries()) {
                     foreach ($entries as $entry) {
-                        Fmt::println($entry);
+//                        Fmt::println($entry);
                         $this->push($entry);
                     }
                 }
-                sleep(1);
             }
 
             $client->disConnect();
@@ -79,7 +62,8 @@ class BinlogToMq extends Command
         }
     }
 
-    private function push($entry){
+    private function push($entry)
+    {
         switch ($entry->getEntryType()) {
             case EntryType::TRANSACTIONBEGIN:
             case EntryType::TRANSACTIONEND:
@@ -92,9 +76,10 @@ class BinlogToMq extends Command
         $evenType = $rowChange->getEventType();
         $header = $entry->getHeader();
 
-        echo sprintf("================> binlog[%s : %d],name[%s,%s], eventType: %s", $header->getLogfileName(), $header->getLogfileOffset(), $header->getSchemaName(), $header->getTableName(), $header->getEventType()), PHP_EOL;
+        echo sprintf("================> binlog[%s : %d],name[%s,%s], eventType: %s", $header->getLogfileName(),
+            $header->getLogfileOffset(), $header->getSchemaName(), $header->getTableName(),
+            $header->getEventType()), PHP_EOL;
         echo $rowChange->getSql(), PHP_EOL;
-
         //库名
         $schemaName = $header->getSchemaName();
         //表名
@@ -104,20 +89,35 @@ class BinlogToMq extends Command
         foreach ($rowChange->getRowDatas() as $rowData) {
             switch ($evenType) {
                 case EventType::DELETE:
-                    //投递到 mq
-                    dispatch(new AsyncToEsJob($rowData->getBeforeColumns(),$evenType));
+//                    dispatch(new AsyncToEsJob($rowData->getBeforeColumns(),$header,$evenType));
+                    $beforeColumns = $rowData->getBeforeColumns();
+                    $data = $this->getDataFormat($beforeColumns);
                     break;
                 case EventType::INSERT:
-                    dispatch(new AsyncToEsJob($rowData->getBeforeColumns(),$evenType));
+                    //
+                    $afterColumns = $rowData->getAfterColumns();
+                    $data = $this->getDataFormat($afterColumns);
                     break;
                 default:
-//                    echo '-------> before', PHP_EOL;
-//                    self::ptColumn($rowData->getBeforeColumns());
-//                    echo '-------> after', PHP_EOL;
-//                    self::ptColumn($rowData->getAfterColumns());
-                    dispatch(new AsyncToEsJob($rowData->getBeforeColumns(),$evenType));
+                    $afterColumns = $rowData->getAfterColumns();
+                    $data = $this->getDataFormat($afterColumns);
                     break;
             }
+            //投递到mq
+            dispatch(new AsyncToEsJob($data, $schemaName, $tableName, $evenType));
         }
+    }
+
+    private function getDataFormat($columnsObj): array
+    {
+        $data = [];
+        foreach ($columnsObj as $column) {
+            array_push($data, [
+                'name'   => $column->getName(),
+                'value'  => $column->getValue(),
+                'update' => var_export($column->getUpdated(), true)
+            ]);
+        }
+        return $data ?? [];
     }
 }

@@ -2,6 +2,9 @@
 
 namespace App\Jobs;
 
+use Illuminate\Support\Facades\Log;
+use Com\Alibaba\Otter\Canal\Protocol\EventType;
+
 class AsyncToEsJob extends Job
 {
     /**
@@ -12,17 +15,21 @@ class AsyncToEsJob extends Job
     public $tries = 2;
 
 
-    private $columns;
-    private $type;
+    private $data;
+    private $schemaName;
+    private $tableName;
+    private $evenType;
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($columns,$type=0)
+    public function __construct($data, $schemaName, $tableName, $evenType = 0)
     {
-        $this->columns = $columns;
-        $this->type = $type;
+        $this->data = $data;
+        $this->schemaName = $schemaName;
+        $this->tableName = $tableName;
+        $this->evenType = $evenType;
     }
 
     /**
@@ -32,8 +39,7 @@ class AsyncToEsJob extends Job
      */
     public function handle()
     {
-        var_dump($this->column->getName());
-        var_dump($this->columns->getValue());
-        var_dump($this->columns->getUpdated());
+        //记日志
+        Log::info('job',['data'=>$this->data,'schemaName'=>$this->schemaName,'evenType'=>$this->evenType]);
     }
 }
